@@ -34,7 +34,7 @@ void* mymalloc(int size){
         if((optimal_block == NULL) && (traverse_block->memory_type == 2) && (traverse_block->free_memory_size >= size)){
             optimal_block = traverse_block;
         }
-        if((optimal_block != NULL) && (traverse_block->memory_type == 2) && (traverse_block->free_memory_size >= size)
+        else if((optimal_block != NULL) && (traverse_block->memory_type == 2) && (traverse_block->free_memory_size >= size)
         && (traverse_block->free_memory_size < optimal_block->free_memory_size)){
             optimal_block = traverse_block;
         }
@@ -62,21 +62,31 @@ void myfree(void *b){
     }
     memory_block *delete_block = (memory_block *)b;
     if(delete_block->memory_type == 1){
-        memory_block *block_above = delete_block->previous_block, *block_below = delete_block->next_block; 
-        int memory_available_above = 0, memory_available_below = 0;
-        while((block_above != NULL) || (block_above->memory_type != 1)){
-            memory_available_above = memory_available_above + sizeof(memory_block) + block_above->free_memory_size;
-            block_above = block_above->previous_block;
+        memory_block *block_above = delete_block->previous_block, *block_below = delete_block->next_block;
+        if((block_below != NULL) && (block_below->memory_type == 2)){
+            printf("below\n");//debug line remove!
+            delete_block->next_block = block_below->next_block;
+            delete_block->free_memory_size = sizeof(memory_block) + block_below->free_memory_size + delete_block->free_memory_size;
+            delete_block->memory_type = 2;
         }
-        while((block_below != NULL) || (block_below->memory_type != 1)){
-            memory_available_below = memory_available_below + sizeof(memory_block) + block_below->free_memory_size;
-            block_below = block_below->next_block;
+        if((block_above != NULL) && (block_above->memory_type == 2)){
+            printf("above\n");//debug line remove!
+            block_above->next_block = delete_block->next_block;
+            block_above->free_memory_size = sizeof(memory_block) + delete_block->free_memory_size + block_above->free_memory_size;
+            block_above->memory_type = 2;
         }
-        block_above = block_above->next_block;
-        block_above->next_block = block_below;
-        block_above->memory_type = 2;
-        block_above->free_memory_size = memory_available_below + memory_available_above + delete_block->free_memory_size + sizeof(memory_block);
-        block_below->previous_block = block_above;
+        if((block_below != NULL) && (block_below->memory_type == 1)){
+            printf("below none\n");//debug line remove!
+            delete_block->memory_type = 2;
+        }
+        if((block_above != NULL) && (block_above->memory_type == 1)){
+            printf("above none\n");//debug line remove!
+            delete_block->memory_type = 2;
+        }
+        if((block_above == NULL) && (block_below == NULL)){
+            printf("entire block\n");//debug line remove!
+            delete_block->memory_type = 2;
+        }
     }
     return;
 }

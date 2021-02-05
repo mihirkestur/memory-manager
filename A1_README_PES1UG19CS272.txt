@@ -7,3 +7,12 @@ if p unallocated
 if size greater than allocated or size negative
 check if size available is greater than or equal to size
 and also memory type is 2 i.e. free
+
+myfree:
+what happens if i pass some unallocated pointer
+1   there is block above and is empty
+2   there is block above and is not empty
+3   there is no block above
+4   there is block below and is empty
+5   there is block below and is not empty
+6   there is no block below
