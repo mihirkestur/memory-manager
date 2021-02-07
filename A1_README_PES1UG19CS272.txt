@@ -1,3 +1,10 @@
+book structure:
+has 4 fields;
+size available: i.e free size, excluding the size of book
+status: 1,2; allocated,unallocated
+next book
+previous book
+
 edge cases
 allocate: if i pass amount more than physical memory
 what happens if i do allocate (0) or negative value
