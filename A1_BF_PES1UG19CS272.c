@@ -80,30 +80,32 @@ void myfree(void *b){
         return;
     }
     memory_block *delete_block = (memory_block *)b;
+    //if the block requested to be deleted is allocated, only then it is elligible to be freed.
     if(delete_block->memory_type == 1){
         memory_block *block_above = delete_block->previous_block, *block_below = delete_block->next_block;
+        //if there is a block below and the block is free; then merge
         if((block_below != NULL) && (block_below->memory_type == 2)){
-            printf("below\n");//debug line remove!
+            
             delete_block->next_block = block_below->next_block;
             delete_block->free_memory_size = sizeof(memory_block) + block_below->free_memory_size + delete_block->free_memory_size;
             delete_block->memory_type = 2;
         }
+        //if there is a block above and the block is free; then merge
         if((block_above != NULL) && (block_above->memory_type == 2)){
-            printf("above\n");//debug line remove!
             block_above->next_block = delete_block->next_block;
             block_above->free_memory_size = sizeof(memory_block) + delete_block->free_memory_size + block_above->free_memory_size;
             block_above->memory_type = 2;
         }
+        //if there is a block below but is not free; then simply mark it as freed.
         if((block_below != NULL) && (block_below->memory_type == 1)){
-            printf("below none\n");//debug line remove!
             delete_block->memory_type = 2;
         }
+        //if there is a block above but is not free; then simply mark it as freed.
         if((block_above != NULL) && (block_above->memory_type == 1)){
-            printf("above none\n");//debug line remove!
             delete_block->memory_type = 2;
         }
+        //if there is no block above or below; then also simply mark it as freed
         if((block_above == NULL) && (block_below == NULL)){
-            printf("entire block\n");//debug line remove!
             delete_block->memory_type = 2;
         }
     }
@@ -115,8 +117,11 @@ void print_book(){
     printf("%ld\n", size_of_structure);
 }
 void display_mem_map(){
+    //start from beginning 
     memory_block *traverse_blocks = (memory_block *)p;
+    //index variable prints the start of each block
     int index = 0;
+    //traverse entire memory to find blocks
     while(traverse_blocks != NULL){
         printf("%d\t%ld\t%d\n",index,sizeof(memory_block),0);
         index = index + sizeof(memory_block);
