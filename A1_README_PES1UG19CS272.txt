@@ -23,3 +23,5 @@ what happens if i pass some unallocated pointer
 4   there is block below and is empty
 5   there is block below and is not empty
 6   there is no block below
+
+take care of allocated nothing but asked for gold

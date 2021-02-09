@@ -4,50 +4,50 @@
 //defining the global variables
 int size = 0;
 char *p = NULL;
+//book keeping structure
 typedef struct block_structure{
-    int memory_type; //Encoded_status : 0 - book, 1 - allocated, 2 - free
+    int memory_type; //1 - allocated, 2 - free
     int free_memory_size; //block size in bytes
-    struct block_structure *next_block;
-    struct block_structure *previous_block;
+    struct block_structure *next_block; //points to next block or null 
+    struct block_structure *previous_block; //points to previous block or null
 }memory_block;
-/*
-allocate function designates a memory block of size "n", 
-all operations are performed within this memory i.e. allocation/deallocation
-*/
+
 void allocate(int n){
-    //here, the entire memory is allocated to a global pointer p ; character array
-    p = (char *)malloc(sizeof(char)*n);
-    size = n;
-    memory_block *book = (memory_block *)p;
-    book->memory_type = 2; //free memory
-    book->free_memory_size = n - sizeof(memory_block);
-    book->next_block = NULL;
-    book->previous_block = NULL;
+    if(n > 0){
+        //global pointer p pointing to a character array of size given by the client i.e. "n"
+        p = (char *)malloc(sizeof(char)*n);
+        size = n; //global size set to n
+        memory_block *book = (memory_block *)p; //book keeping structure created
+        book->memory_type = 2; //marked as free memory
+        book->free_memory_size = n - sizeof(memory_block); //free memory is total memory - memory of book keeping structure
+        book->next_block = NULL; //next block is null
+        book->previous_block = NULL; //previous block is null
+    }
 }
-void* mymalloc(int size){
-    //traverse block has the first block; and optimal block is initialised to null.
-    memory_block *traverse_block = (memory_block *)p, *optimal_block = NULL;
-    //if size greater than allocated or if size negative
-    if(size < 0){ //size > size ||
+//changing the argument name from size to requested_size since it clashed with the global variable size
+void* mymalloc(int requested_size){
+    //if requested_size greater than allocated or if requested_size negative
+    if(requested_size < 0 || requested_size > size){ 
         return NULL;
     }
+    //traverse block has the first block; and optimal block is initialised to null.
+    memory_block *traverse_block = (memory_block *)p, *optimal_block = NULL;
     //traverse the entire memory block to find the optimal place to allocate
     while(traverse_block != NULL){
         /*optimal block is assigned to the first block that has free space 
         greater than or equal to the required amount*/
-        if((optimal_block == NULL) && (traverse_block->memory_type == 2) && (traverse_block->free_memory_size >= size)){
+        if((optimal_block == NULL) && (traverse_block->memory_type == 2) && (traverse_block->free_memory_size >= requested_size)){
             optimal_block = traverse_block;
         }
         /*this checks for a block that is much more optimal, that is if it has lesser memory available 
-        than the previously assigned block,but greater than the required size*/
-        else if((optimal_block != NULL) && (traverse_block->memory_type == 2) && (traverse_block->free_memory_size >= size)
+        than the previously assigned block,but greater than the requested_size*/
+        else if((optimal_block != NULL) && (traverse_block->memory_type == 2) && (traverse_block->free_memory_size >= requested_size)
         && (traverse_block->free_memory_size < optimal_block->free_memory_size)){
             optimal_block = traverse_block;
         }
-        //moving to the next block
-        traverse_block = traverse_block->next_block; 
+        traverse_block = traverse_block->next_block; //moving to the next block
     }
-    //if no optimal block found
+    //if no optimal block found 
     if(optimal_block == NULL){
         return NULL;
     }
@@ -55,13 +55,14 @@ void* mymalloc(int size){
     else{
         memory_block *temp_next_block = optimal_block->next_block; //noting optimal block's next block
         int free_size = optimal_block->free_memory_size; //the size of the optimal block is noted
-        optimal_block->free_memory_size = size; //size of the optimal block is changed to the allocation size
+        optimal_block->free_memory_size = requested_size; //size of the optimal block is changed to the allocation size
         optimal_block->memory_type = 1; //marking optimal block as allocated
         //creating a book for the unallocated block (if any)
-        if((free_size - size) > sizeof(memory_block)){
+        //checking if remaining space has enough memory for a book structure
+        if((free_size - requested_size) > sizeof(memory_block)){
             memory_block *book = (memory_block *)(optimal_block + (optimal_block->free_memory_size) + 1); //creating book for unallocated block
             optimal_block->next_block = book; //optimal block's next points to the newly created unallocated block
-            book->free_memory_size = free_size - size - sizeof(memory_block); //unallocated blocks size is assigned
+            book->free_memory_size = free_size - requested_size - sizeof(memory_block); //unallocated blocks size is assigned
             book->memory_type = 2; //marking unallocated block as unallocated
             book->next_block = temp_next_block; //assigning next block to unallocated block
             book->previous_block = optimal_block; //assigning the previous block as the optimal block
@@ -76,7 +77,21 @@ void* mymalloc(int size){
     return optimal_block;
 }
 void myfree(void *b){
+    //if b passed is null then return
     if(b == NULL){
+        return;
+    }
+    //to see if the block requested to be deleted is valid; setting flag to 1 if not found.
+    memory_block *search_block = (memory_block *)p; int flag = 1;
+    while(search_block != NULL){
+        if(search_block == b){
+            //if found flag set to 0 and normal freeing procedure takes place
+            flag = 0;
+        }
+        search_block = search_block->next_block; //go to next block 
+    }
+    //if no block found; return.
+    if(flag){
         return;
     }
     memory_block *delete_block = (memory_block *)b;
