@@ -6,28 +6,30 @@ int size = 0;
 char *p = NULL;
 //book keeping structure
 typedef struct block_structure{
-    int memory_type; //1 - allocated, 2 - free
-    int free_memory_size; //block size in bytes
-    struct block_structure *next_block; //points to next block or null 
+    int memory_type;                        //1 - allocated, 2 - free
+    int free_memory_size;                   //memory available for use 
+    struct block_structure *next_block;     //points to next block or null 
     struct block_structure *previous_block; //points to previous block or null
 }memory_block;
 
 void allocate(int n){
-    if(n > 0){
+    //if size asked to be allocated is valid i.e. greater than book size and 0
+    if(n > 0 && n > sizeof(memory_block)){
         //global pointer p pointing to a character array of size given by the client i.e. "n"
         p = (char *)malloc(sizeof(char)*n);
-        size = n; //global size set to n
-        memory_block *book = (memory_block *)p; //book keeping structure created
-        book->memory_type = 2; //marked as free memory
-        book->free_memory_size = n - sizeof(memory_block); //free memory is total memory - memory of book keeping structure
-        book->next_block = NULL; //next block is null
-        book->previous_block = NULL; //previous block is null
+        size = n;                              //global size set to n
+        memory_block *book = (memory_block *)p;//book keeping structure created
+        book->memory_type = 2;                 //marked as free memory
+        //free memory is total memory - memory of book keeping structure
+        book->free_memory_size = n - sizeof(memory_block); 
+        book->next_block = NULL;               //next block is null
+        book->previous_block = NULL;           //previous block is null
     }
 }
 //changing the argument name from size to requested_size since it clashed with the global variable size
 void* mymalloc(int requested_size){
-    //if requested_size greater than allocated or if requested_size negative
-    if(requested_size < 0 || requested_size > size){ 
+    //return if requested_size greater than allocated or if requested_size negative or if p is unallocated
+    if(requested_size <= 0 || requested_size > size || p == NULL){ 
         return NULL;
     }
     //traverse block has the first block; and optimal block is initialised to null.
@@ -53,19 +55,19 @@ void* mymalloc(int requested_size){
     }
     //if some optimal block is found
     else{
-        memory_block *temp_next_block = optimal_block->next_block; //noting optimal block's next block
         int free_size = optimal_block->free_memory_size; //the size of the optimal block is noted
-        optimal_block->free_memory_size = requested_size; //size of the optimal block is changed to the allocation size
-        optimal_block->memory_type = 1; //marking optimal block as allocated
         //creating a book for the unallocated block (if any)
         //checking if remaining space has enough memory for a book structure
         if((free_size - requested_size) > sizeof(memory_block)){
+            optimal_block->free_memory_size = requested_size; //size of the optimal block is changed to the allocation size
+            optimal_block->memory_type = 1;         //marking optimal block as allocated
+            memory_block *temp_next_block = optimal_block->next_block; //noting optimal block's next block
             memory_block *book = (memory_block *)(optimal_block + (optimal_block->free_memory_size) + 1); //creating book for unallocated block
-            optimal_block->next_block = book; //optimal block's next points to the newly created unallocated block
+            optimal_block->next_block = book;       //optimal block's next points to the newly created unallocated block
             book->free_memory_size = free_size - requested_size - sizeof(memory_block); //unallocated blocks size is assigned
-            book->memory_type = 2; //marking unallocated block as unallocated
-            book->next_block = temp_next_block; //assigning next block to unallocated block
-            book->previous_block = optimal_block; //assigning the previous block as the optimal block
+            book->memory_type = 2;                  //marking unallocated block as unallocated
+            book->next_block = temp_next_block;     //assigning next block to unallocated block
+            book->previous_block = optimal_block;   //assigning the previous block as the optimal block
         }
         //if the unallocated size is less than book's size
         else{
@@ -73,8 +75,8 @@ void* mymalloc(int requested_size){
             optimal_block->memory_type = 1;
         }
     }
-    //returns a pointer to the optimal block i.e. allocated block.
-    return optimal_block;
+    //returns a pointer to the workable space of the optimal block. i.e. free memory
+    return optimal_block + sizeof(memory_block);
 }
 void myfree(void *b){
     //if b passed is null then return
@@ -87,6 +89,7 @@ void myfree(void *b){
         if(search_block == b){
             //if found flag set to 0 and normal freeing procedure takes place
             flag = 0;
+            break;
         }
         search_block = search_block->next_block; //go to next block 
     }
