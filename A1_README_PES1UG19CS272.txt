@@ -1,6 +1,7 @@
-Mihir Madhusudan Kestur
-PES1UG19CS272
-SECTION E SEMESTER 4
+Name    :   Mihir Madhusudan Kestur
+SRN     :   PES1UG19CS272
+SECTION :   E 
+SEMESTER:   4
 
 Last three digits of my srn = 272 => (272%3) + 1 = 3
 
@@ -16,6 +17,7 @@ next_block      ; This is a pointer that points to the next book keeping structu
 previous_block  ; This is a pointer that points to the previous book keeping structure (previous memory block) or NULL
 
 Allocation:
+?what if it is already allocated?
 Allocate size n to global character array
 Size should be strictly greater than size of book keeping structure
 
@@ -30,22 +32,23 @@ Myfree:
 If a NULL pointer is passed, function simply returns
 The entire memory array is traversed to find if the pointer passed points to a valid memory block in the array
 If it is not there then function simply returns
+The block requested to be deleted is also checked if it is allocated
 If a valid memory block is found, there can be 6 possibilities:
-1   There is block above and it is empty
-2   There is block above and it is not empty
-3   There is no block above
-4   There is block below and it is empty
-5   There is block below and it is not empty
-6   There is no block below
-
-what happens if i pass some unallocated pointer
+1   There is block above and it is empty        => The block is merged
+2   There is block above and it is not empty    => Left alone
+3   There is no block above                     => Nothing can be done
+4   There is block below and it is empty        => The block is merged 
+5   There is block below and it is not empty    => Left alone
+6   There is no block below                     => Nothing can be done
+So taking care of these conditions every time free function is called, there can never be two consecutive blocks
+which are free
 
 display_mem_map:
+Display function prints the entire memory array. The first column indicates the starting index for a particular 
+memory block. The second column represents the memory consumed by that particular block. The last column shows
+the type of that particular block, i.e. 0 => book keeping record, 1 => Allocated memory block, 2 => Free space.
 
-edge cases
-allocate: if i pass amount more than physical memory
-what happens if i do allocate (0) or negative value
+print_book:
+This function when called simply prints the size of the book keeping structure.
 
 what happens if i request size = total memory
-
-take care of allocated nothing but asked for gold

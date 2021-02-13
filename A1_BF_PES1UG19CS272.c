@@ -6,7 +6,7 @@ int size = 0;
 char *p = NULL;
 //book keeping structure
 typedef struct block_structure{
-    int memory_type;                        //1 - allocated, 2 - free
+    int memory_type;                        //1 => allocated, 2 => free
     int free_memory_size;                   //memory available for use 
     struct block_structure *next_block;     //points to next block or null 
     struct block_structure *previous_block; //points to previous block or null
@@ -83,10 +83,11 @@ void myfree(void *b){
     if(b == NULL){
         return;
     }
+    memory_block *check = (memory_block *)((memory_block *)b - sizeof(memory_block));
     //to see if the block requested to be deleted is valid; setting flag to 1 if not found.
     memory_block *search_block = (memory_block *)p; int flag = 1;
     while(search_block != NULL){
-        if(search_block == b){
+        if(search_block == check){
             //if found flag set to 0 and normal freeing procedure takes place
             flag = 0;
             break;
@@ -97,13 +98,12 @@ void myfree(void *b){
     if(flag){
         return;
     }
-    memory_block *delete_block = (memory_block *)b;
+    memory_block *delete_block = check;//(memory_block *)b;
     //if the block requested to be deleted is allocated, only then it is elligible to be freed.
     if(delete_block->memory_type == 1){
         memory_block *block_above = delete_block->previous_block, *block_below = delete_block->next_block;
         //if there is a block below and the block is free; then merge
         if((block_below != NULL) && (block_below->memory_type == 2)){
-            
             delete_block->next_block = block_below->next_block;
             delete_block->free_memory_size = sizeof(memory_block) + block_below->free_memory_size + delete_block->free_memory_size;
             delete_block->memory_type = 2;
@@ -141,7 +141,7 @@ void display_mem_map(){
     int index = 0;
     //traverse entire memory to find blocks
     while(traverse_blocks != NULL){
-        printf("%d\t%ld\t%d\n",index,sizeof(memory_block),0);
+        printf("%d\t%ld\t%d\n",index,sizeof(memory_block),0);   //print the book structure
         index = index + sizeof(memory_block);
         printf("%d\t%d\t%d\n",index,traverse_blocks->free_memory_size,traverse_blocks->memory_type);
         index = index + traverse_blocks->free_memory_size;
