@@ -11,7 +11,7 @@ typedef struct block_structure{
     struct block_structure *next_block;     //points to next block or null 
     struct block_structure *previous_block; //points to previous block or null
 }memory_block;
-
+int size_of_structure = sizeof(memory_block);
 void allocate(int n){
     //if size asked to be allocated is valid i.e. greater than book size and 0
     if(n > 0 && n > sizeof(memory_block)){
@@ -76,18 +76,20 @@ void* mymalloc(int requested_size){
         }
     }
     //returns a pointer to the workable space of the optimal block. i.e. free memory
-    return optimal_block + sizeof(memory_block);
+    return (char *)optimal_block + sizeof(memory_block);
 }
-void myfree(void *b){
+void myfree(void *b)
+{
     //if b passed is null then return
     if(b == NULL){
         return;
     }
-    memory_block *check = (memory_block *)((memory_block *)b - sizeof(memory_block));
+    //getting the address of the book of the block that is to be deleted
+    memory_block *delete_block = (memory_block*)((char*)b-sizeof(memory_block));
     //to see if the block requested to be deleted is valid; setting flag to 1 if not found.
     memory_block *search_block = (memory_block *)p; int flag = 1;
     while(search_block != NULL){
-        if(search_block == check){
+        if(search_block == delete_block){
             //if found flag set to 0 and normal freeing procedure takes place
             flag = 0;
             break;
@@ -98,65 +100,71 @@ void myfree(void *b){
     if(flag){
         return;
     }
-    memory_block *delete_block = check; //(memory_block *)b-sizeof(memory_block);
-    //if the block requested to be deleted is allocated, only then it is elligible to be freed.
+    //perform deletion only if it is allocated
     if(delete_block->memory_type == 1){
-        memory_block *block_above = delete_block->previous_block, *block_below = delete_block->next_block;
-        //There are empty blocks above and below
-        if((block_above != NULL && block_above->memory_type == 2) && (block_below != NULL && block_below->memory_type == 2)){
-            block_above->free_memory_size = block_above->free_memory_size + delete_block->free_memory_size + block_below->free_memory_size + sizeof(memory_block) + sizeof(memory_block);
-            block_above->next_block = block_below->next_block;
-            block_above->memory_type = 2;
-            if(block_below->next_block != NULL){
-                block_below->next_block->previous_block = block_above;
+        //noting blocks above and below of the block that is to be deleted
+        memory_block *block_above, *block_below;
+        block_below = delete_block->next_block;     
+        block_above = delete_block->previous_block;
+        //if block that is to be deleted is last block
+        if(block_below == NULL){
+            //if it is the only block simply mark it unallocated
+            if(block_above == NULL){
+                delete_block->memory_type = 2;
+                return;
             }
-        }
-        //There is an empty block above but filled below
-        else if((block_above != NULL && block_above->memory_type == 2) && (block_below != NULL && block_below->memory_type == 1)){
-            block_above->free_memory_size = block_above->free_memory_size + delete_block->free_memory_size + sizeof(memory_block);
-            block_above->next_block = delete_block->next_block;
-            block_above->memory_type = 2; 
-            block_below->previous_block = block_above;
-        }
-        //There is an empty block below but filled above
-        else if((block_above != NULL && block_above->memory_type == 1) && (block_below != NULL && block_below->memory_type == 2)){
-            delete_block->free_memory_size = delete_block->free_memory_size + block_below->free_memory_size + sizeof(memory_block);
-            delete_block->next_block = block_below->next_block;
-            delete_block->memory_type = 2;
-            if(block_below->next_block != NULL){
-                block_below->next_block->previous_block = delete_block;
+            //if there are blocks above
+            else{
+                //simply mark it as unallocated if above is occupied
+                if(block_above->memory_type == 1){
+                    delete_block->memory_type = 2;
+                }
+                //if above block is free then merge 
+                else{
+                    delete_block->memory_type = 2;
+                    delete_block->previous_block->next_block = delete_block->next_block;
+                    delete_block->previous_block->free_memory_size = delete_block->previous_block->free_memory_size + delete_block->free_memory_size + sizeof(memory_block);
+                    //delete block now becomes the previous block
+                    delete_block = delete_block->previous_block;
+                    //so, block above is the next block to delete block
+                    block_below = delete_block->next_block;
+                    //block below becomes the previous block to delete block
+                    block_above = delete_block->previous_block;
+                }
+                
             }
+            
         }
-        //There is null above and empty block below
-        else if(block_above == NULL && (block_below != NULL && block_below->memory_type == 2)){
-            delete_block->free_memory_size = delete_block->free_memory_size + block_below->free_memory_size + sizeof(memory_block);
-            delete_block->next_block = block_below->next_block;
+        //for all other cases
+        if(!(block_above != NULL && block_below == NULL)){
             delete_block->memory_type = 2;
-            if(block_below->next_block != NULL){
-                block_below->next_block->previous_block = delete_block;
+            //if there is a block above and it is free then merge
+            if(block_above != NULL && block_above->memory_type == 2){
+                delete_block->previous_block->next_block = delete_block->next_block;
+                delete_block->next_block->previous_block = delete_block->previous_block;
+                delete_block->previous_block->free_memory_size = delete_block->previous_block->free_memory_size + delete_block->free_memory_size+sizeof(memory_block);
+                //delete block made as the block above
+                delete_block = delete_block->previous_block;
+                //so block below becomes next block of delete block
+                block_below = delete_block->next_block;
+                //then, block above becomes the previous block of the delete block
+                block_above = delete_block->previous_block;
             }
-        }
-        //There is null above and filled block below
-        else if(block_above == NULL && (block_below != NULL && block_below->memory_type == 1)){
-            delete_block->memory_type = 2;
-        }
-        //There is empty block above and null below
-        else if((block_above != NULL && block_above->memory_type == 2) && block_below == NULL){
-            block_above->free_memory_size = block_above->free_memory_size + delete_block->free_memory_size + sizeof(memory_block);
-            block_above->next_block = delete_block->next_block;
-            block_above->memory_type = 2;
-        }
-        //There is filled block above and null below
-        else if((block_above != NULL && block_above->memory_type == 1) && block_below == NULL){
-            delete_block->memory_type = 2;
-        }
-        //There is null above and null below
-        else if(block_above == NULL && block_below == NULL){
-            delete_block->memory_type = 2;
+            //if there is a block below and it is free then merge
+            if(block_below != NULL && block_below->memory_type == 2){
+                //free size noted
+                int free_size = delete_block->next_block->free_memory_size;
+                delete_block->next_block = delete_block->next_block->next_block;
+                //if there is a block below then the prevous block points to the current block
+                if(delete_block->next_block != NULL){
+                    delete_block->next_block->previous_block = delete_block;
+                }
+                delete_block->free_memory_size = delete_block->free_memory_size + free_size + sizeof(memory_block);
+            }
         }
     }
-    return;
-}
+} 
+
 void print_book(){
     //size of the book-keeping structure is printed
     long int size_of_structure = sizeof(memory_block);
