@@ -40,7 +40,7 @@ the type of that particular block, i.e. 0 => book keeping record, 1 => Allocated
 This function when called simply prints the size of the book keeping structure.
 
 **To run**
-'''
-gcc *.c
-./a.out
-'''
+```bash
+$ gcc *.c
+$ ./a.out
+```
