@@ -3,11 +3,11 @@
 In best fit policy, the block having size that is greater than or equal to the requested size but, least size
 among the available blocks of memory is returned/allocated.
 
-Book structure has 4 fields;
-**memory_type**     ; Indicates if the memory block is allocated(1) or unallocated(2)
-**free_memory_size**; Has the free memory available/in use i.e. (memory of the block - size of book structure) 
-**next_block**      ; This is a pointer that points to the next book keeping structure (next memory block) or NULL
-**previous_block**  ; This is a pointer that points to the previous book keeping structure (previous memory block) or NULL
+Book structure has 4 fields;<br>
+**memory_type**     ; Indicates if the memory block is allocated(1) or unallocated(2)<br>
+**free_memory_size**; Has the free memory available/in use i.e. (memory of the block - size of book structure) <br>
+**next_block**      ; This is a pointer that points to the next book keeping structure (next memory block) or NULL<br>
+**previous_block**  ; This is a pointer that points to the previous book keeping structure (previous memory block) or NULL<br>
 
 **Allocation:**
 Allocate size n to global character array
