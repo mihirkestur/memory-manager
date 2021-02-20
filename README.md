@@ -1,10 +1,3 @@
-Name    :   Mihir Madhusudan Kestur
-SRN     :   PES1UG19CS272
-SECTION :   E 
-SEMESTER:   4
-
-Last three digits of my srn = 272 => (272%3) + 1 = 3
-
 BEST FIT ALLOCATION POLICY
 
 In best fit policy, the block having size that is greater than or equal to the requested size but, least size
@@ -45,6 +38,3 @@ the type of that particular block, i.e. 0 => book keeping record, 1 => Allocated
 
 print_book:
 This function when called simply prints the size of the book keeping structure.
-
-
-
